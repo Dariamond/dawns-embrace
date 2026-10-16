@@ -46,6 +46,29 @@ export const productSchema = z.object({
 });
 export type ProductInput = z.infer<typeof productSchema>;
 
+// Partial update schema for admin edits (price/name/stock/isActive, etc.).
+// At least one field must be present so a no-op PATCH is rejected.
+export const productUpdateSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required.").max(200),
+    description: z.string().trim().min(1, "Description is required.").max(2000),
+    dialColor: z.string().trim().min(1, "Dial color is required.").max(60),
+    category: z.string().trim().min(1).max(60),
+    priceKobo: z
+      .number()
+      .int("Price must be an integer number of kobo.")
+      .positive("Price must be greater than zero."),
+    stock: z.number().int().min(0, "Stock cannot be negative."),
+    imageUrl: z.string().trim().url("Image URL must be a valid URL."),
+    imagePublicId: z.string().trim().max(200).nullable(),
+    isActive: z.boolean(),
+  })
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "No fields to update.",
+  });
+export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
+
 export const orderStatusSchema = z.object({
   status: z.enum([
     "PENDING",
