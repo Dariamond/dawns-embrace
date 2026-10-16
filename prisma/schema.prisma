@@ -1,0 +1,127 @@
+// Dawns Embrace — Prisma schema
+// Data model per design.md §3. Prices stored as integer kobo (NGN minor unit).
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING // created, not yet paid
+  PAID // payment verified
+  APPROVED // admin approved
+  PROCESSING // being prepared
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  passwordHash       String
+  name               String?
+  role               Role                @default(CUSTOMER)
+  emailVerified      DateTime?
+  verificationTokens VerificationToken[]
+  addresses          Address[]
+  orders             Order[]
+  notifications      Notification[]
+  createdAt          DateTime            @default(now())
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // hashed token value
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  phone      String
+  street     String
+  city       String
+  state      String
+  country    String  @default("Nigeria")
+  postalCode String?
+  isDefault  Boolean @default(false)
+  orders     Order[]
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  name          String
+  description   String
+  dialColor     String // e.g. "Blue", "Green"
+  category      String      @default("watch") // flexible for future product types
+  priceKobo     Int // price in kobo (NGN minor unit)
+  stock         Int         @default(0)
+  imageUrl      String // Cloudinary URL
+  imagePublicId String? // Cloudinary public id (for deletion)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  orderItems    OrderItem[]
+}
+
+model Order {
+  id            String             @id @default(cuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+  addressId     String?
+  address       Address?           @relation(fields: [addressId], references: [id])
+  status        OrderStatus        @default(PENDING)
+  totalKobo     Int
+  paystackRef   String?            @unique // transaction reference
+  paidAt        DateTime?
+  statusHistory OrderStatusEvent[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product @relation(fields: [productId], references: [id])
+  nameSnapshot  String // name at purchase time
+  unitPriceKobo Int // price at purchase time
+  quantity      Int
+}
+
+model OrderStatusEvent {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  orderId   String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
