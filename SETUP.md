@@ -83,7 +83,70 @@ npx prisma generate   # client generates successfully
 Run the `migrate` + `seed` steps above once a real `DATABASE_URL` is available (local Postgres,
 Docker, or a hosted provider such as Neon/Supabase).
 
-## 4. Verify the build
+## 4. Run the app locally
+
+With `.env` filled in and the database migrated + seeded:
+
+```powershell
+npm run dev
+```
+
+The app serves both the storefront and the admin dashboard at `http://localhost:3000`. Sign in
+to the admin dashboard with the seeded `ADMIN_EMAIL` / `ADMIN_PASSWORD` credentials.
+
+### Full local run flow (summary)
+
+```powershell
+Copy-Item .env.example .env   # then edit .env and supply DATABASE_URL + the other keys
+npx prisma generate
+npx prisma migrate dev --name init
+npx prisma db seed
+npm run dev
+```
+
+## 5. Paystack (test mode)
+
+Payments run in **Paystack test mode** for now (no real charges). Grab the test keys from the
+Paystack dashboard (Settings → API Keys & Webhooks, with the dashboard toggled to **Test**):
+
+- `PAYSTACK_PUBLIC_KEY` — the test public key (starts with `pk_test_`)
+- `PAYSTACK_SECRET_KEY` — the test secret key (starts with `sk_test_`)
+
+Put both in `.env`. Use a Paystack test card to complete a checkout.
+
+### Deliver the webhook locally (tunnel)
+
+Paystack must reach the webhook endpoint `POST /api/payments/webhook` over a public HTTPS URL,
+so a local `http://localhost:3000` has to be exposed through a tunnel. With `npm run dev`
+running, start a tunnel in a second terminal, e.g.:
+
+```powershell
+# ngrok
+ngrok http 3000
+
+# or cloudflared
+cloudflared tunnel --url http://localhost:3000
+```
+
+The tunnel prints a public HTTPS URL (e.g. `https://<random>.ngrok-free.app`). In the Paystack
+dashboard (Settings → API Keys & Webhooks → **Test** section) set the webhook URL to:
+
+```
+https://<your-tunnel-host>/api/payments/webhook
+```
+
+Notes:
+
+- The webhook handler verifies the `x-paystack-signature` header (HMAC-SHA512 of the raw request
+  body signed with `PAYSTACK_SECRET_KEY`), so the secret key in `.env` must match the dashboard
+  key that signs the events.
+- Payment is only ever marked paid server-side — the `payments/verify` endpoint and this webhook
+  both converge on one idempotent update, so a successful payment is confirmed even if one of the
+  two paths is delayed.
+- The webhook runs on the Node.js runtime and reads the raw body; do not place a proxy in front
+  that rewrites or re-encodes the request body, or signature verification will fail.
+
+## 6. Verify the build
 
 ```powershell
 npx prisma validate
