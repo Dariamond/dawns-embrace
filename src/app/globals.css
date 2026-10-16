@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/*
+ * Dawns Embrace brand theme (Tailwind CSS v4 CSS-first config).
+ * Brand tokens are exposed as Tailwind theme colors so they can be used as
+ * utilities such as `bg-gulf-blue`, `text-persian-blue`, `bg-brand-white`.
+ */
+@theme {
+  --color-gulf-blue: #060e6e; /* primary */
+  --color-persian-blue: #1f27e9; /* secondary */
+  --color-brand-white: #ffffff; /* accent */
+}
+
+:root {
+  /* Dark base for the landing hero. */
+  --background: #050714;
+  --foreground: #ededed;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
