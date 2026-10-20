@@ -1,0 +1,22 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Storefront product-detail gallery. Replace the single product image on the detail page with a gallery: a large main image plus a clickable thumbnail row (primary Product.imageUrl first, then the ProductImage sub-images); clicking a thumbnail swaps the large image. Graceful when there are no sub-images. Depends on FEAT-001 (getProduct now includes images). Grounded in: src/app/(shop)/product/[id]/page.tsx currently renders one next/image from product.imageUrl; data fetch stays server-side.",
+  "status": "completed",
+  "steps": [
+    "Create src/components/product-gallery.tsx as a client component (\"use client\"). Props: { mainImageUrl: string; name: string; images: { id: string; url: string }[] }. Build a combined list [{ key: 'main', url: mainImageUrl }, ...images]. Render a large active image (next/image, fill, aspect-square, rounded-2xl bg-gray-100 to match the current page) and, when there is more than one image, a horizontal row of clickable thumbnail buttons; the active thumbnail gets a persian-blue ring/border. useState holds the active url. When only the main image exists, render just the large image (no thumbnail row).",
+    "Edit src/app/(shop)/product/[id]/page.tsx: keep the server-side getProduct call and notFound handling; replace the existing single <Image> block (the div with class relative aspect-square ...) with <ProductGallery mainImageUrl={product.imageUrl} name={product.name} images={product.images} />. Import the component. Leave the rest of the page (price, description, AddToCartButton using product.imageUrl) unchanged."
+  ],
+  "acceptance_criteria": [
+    "The product detail page shows a large image plus a thumbnail row when sub-images exist; clicking a thumbnail swaps the large image without a full page reload.",
+    "With no sub-images, the page shows only the main image and no empty thumbnail row, with no runtime error.",
+    "Styling matches the existing rounded/gray-background look and brand colors.",
+    "`npx tsc --noEmit` and `npx next lint` pass."
+  ],
+  "verification": [
+    "`npx tsc --noEmit` passes.",
+    "`npx next lint` passes."
+  ],
+  "blocked_reason": null,
+  "findings": "Created src/components/product-gallery.tsx as a 'use client' component. Props: { mainImageUrl: string; name: string; images: { id: string; url: string }[] } (images typed via product.images from ProductWithImages, which satisfies the { id, url } shape). Builds a combined list with { key: 'main', url: mainImageUrl } first, then sub-images keyed by image.id. useState holds activeUrl (initialized to mainImageUrl). Large active image uses next/image fill, aspect-square, rounded-2xl bg-gray-100 — matching the prior page block. Thumbnail row only renders when allImages.length > 1; each thumbnail is an accessible button (aria-pressed, aria-label), active thumbnail gets ring-2 ring-persian-blue, inactive gets ring-1 ring-gray-200 with hover. src/app/(shop)/product/[id]/page.tsx: removed the unused `import Image`, added `import { ProductGallery }`, replaced the single-image div with <ProductGallery mainImageUrl={product.imageUrl} name={product.name} images={product.images} />; server-side getProduct + notFound and the rest of the page (price/description/AddToCartButton using product.imageUrl) left unchanged. Graceful with zero sub-images: only the large image renders, no thumbnail row, no runtime error. Verification: npx tsc --noEmit passes; npx next lint passes (no warnings/errors)."
+}

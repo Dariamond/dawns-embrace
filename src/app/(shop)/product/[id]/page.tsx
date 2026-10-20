@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { ProductGallery } from "@/components/product-gallery";
 import { formatKobo } from "@/lib/money";
 import { getProduct } from "@/lib/products";
 
@@ -32,16 +32,11 @@ export default async function ProductDetailPage({
       </Link>
 
       <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
-        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover"
-            priority
-          />
-        </div>
+        <ProductGallery
+          mainImageUrl={product.imageUrl}
+          name={product.name}
+          images={product.images}
+        />
 
         <div className="flex flex-col">
           <h1 className="text-3xl font-bold text-gulf-blue">{product.name}</h1>
