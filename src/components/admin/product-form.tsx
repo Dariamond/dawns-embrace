@@ -11,6 +11,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { uploadImageToCloudinary } from "@/lib/upload-image";
+
 type Fields = {
   name: string;
   description: string;
@@ -27,56 +29,17 @@ const EMPTY: Fields = {
   stock: "",
 };
 
-type CloudinaryUploadResponse = {
-  secure_url?: string;
-  public_id?: string;
-  error?: { message?: string };
-};
-
 export function ProductForm() {
   const router = useRouter();
   const [fields, setFields] = useState<Fields>(EMPTY);
   const [file, setFile] = useState<File | null>(null);
+  const [subFiles, setSubFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   function update(field: keyof Fields, value: string) {
     setFields((prev) => ({ ...prev, [field]: value }));
-  }
-
-  async function uploadToCloudinary(image: File): Promise<{
-    imageUrl: string;
-    imagePublicId: string;
-  }> {
-    // 1. Get signed params from our server (admin-gated).
-    const signRes = await fetch("/api/uploads", { method: "POST" });
-    const sign = await signRes.json();
-    if (!signRes.ok) {
-      throw new Error(sign?.error ?? "Could not authorize image upload.");
-    }
-
-    // 2. Upload directly to Cloudinary with the signed params.
-    const form = new FormData();
-    form.append("file", image);
-    form.append("api_key", sign.apiKey);
-    form.append("timestamp", String(sign.timestamp));
-    form.append("signature", sign.signature);
-    form.append("folder", sign.folder);
-
-    const uploadRes = await fetch(
-      `https://api.cloudinary.com/v1_1/${sign.cloudName}/image/upload`,
-      { method: "POST", body: form },
-    );
-    const uploaded: CloudinaryUploadResponse = await uploadRes.json();
-    if (!uploadRes.ok || !uploaded.secure_url || !uploaded.public_id) {
-      throw new Error(uploaded.error?.message ?? "Image upload failed.");
-    }
-
-    return {
-      imageUrl: uploaded.secure_url,
-      imagePublicId: uploaded.public_id,
-    };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -101,7 +64,14 @@ export function ProductForm() {
 
     setSubmitting(true);
     try {
-      const { imageUrl, imagePublicId } = await uploadToCloudinary(file);
+      const { url: imageUrl, publicId: imagePublicId } =
+        await uploadImageToCloudinary(file);
+
+      // Upload any additional sub-images, preserving the chosen order.
+      const uploaded: { url: string; publicId: string }[] = [];
+      for (const subFile of subFiles) {
+        uploaded.push(await uploadImageToCloudinary(subFile));
+      }
 
       const res = await fetch("/api/products", {
         method: "POST",
@@ -115,6 +85,11 @@ export function ProductForm() {
           stock,
           imageUrl,
           imagePublicId,
+          subImages: uploaded.map((u, i) => ({
+            url: u.url,
+            publicId: u.publicId,
+            sortOrder: i,
+          })),
         }),
       });
       const data = await res.json();
@@ -124,6 +99,7 @@ export function ProductForm() {
 
       setFields(EMPTY);
       setFile(null);
+      setSubFiles([]);
       setSuccess(true);
       router.refresh();
     } catch (err) {
@@ -194,6 +170,27 @@ export function ProductForm() {
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="mt-1 w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gulf-blue file:px-3 file:py-2 file:text-brand-white"
         />
+      </div>
+      <div>
+        <label
+          htmlFor="subImages"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Additional images (optional)
+        </label>
+        <input
+          id="subImages"
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => setSubFiles(Array.from(e.target.files ?? []))}
+          className="mt-1 w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gulf-blue file:px-3 file:py-2 file:text-brand-white"
+        />
+        {subFiles.length > 0 && (
+          <p className="mt-1 text-xs text-gray-500">
+            {subFiles.length} image{subFiles.length === 1 ? "" : "s"} selected.
+          </p>
+        )}
       </div>
 
       {error && (

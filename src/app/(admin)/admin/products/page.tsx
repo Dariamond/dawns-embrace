@@ -11,6 +11,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminProductsPage() {
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
+    include: {
+      images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+    },
   });
 
   return (
@@ -41,6 +44,7 @@ export default async function AdminProductsPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-xs uppercase tracking-wide text-gray-400">
+                    <th className="px-4 py-2 font-medium">Image</th>
                     <th className="px-4 py-2 font-medium">Name</th>
                     <th className="px-4 py-2 font-medium">Dial</th>
                     <th className="px-4 py-2 font-medium">Price</th>
@@ -59,6 +63,12 @@ export default async function AdminProductsPage() {
                         priceKobo: product.priceKobo,
                         stock: product.stock,
                         isActive: product.isActive,
+                        imageUrl: product.imageUrl,
+                        imagePublicId: product.imagePublicId,
+                        images: product.images.map((img) => ({
+                          id: img.id,
+                          url: img.url,
+                        })),
                       }}
                     />
                   ))}
