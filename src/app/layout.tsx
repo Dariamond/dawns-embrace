@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Dawns Embrace",
-  description: "Dawns Embrace — A new day, a new you.",
+  title: "Dawn's Embrace",
+  description: "Dawn's Embrace — A new day, a new you.",
 };
 
 export default function RootLayout({

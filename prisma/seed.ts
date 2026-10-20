@@ -27,40 +27,40 @@ type SampleProduct = {
 
 const sampleProducts: SampleProduct[] = [
   {
-    name: "Dawns Embrace Midnight Blue",
+    name: "Dawn's Embrace Midnight Blue",
     description:
-      "The signature Dawns Embrace timepiece with a deep gulf-blue dial and stainless steel case.",
+      "The signature Dawn's Embrace timepiece with a deep gulf-blue dial and stainless steel case.",
     dialColor: "Blue",
     priceKobo: 15_000_000, // ₦150,000.00
     stock: 25,
-    imageUrl: "/brand/hero-watch.jpg",
+    imageUrl: "/brand/hero-watch.png",
   },
   {
-    name: "Dawns Embrace Emerald Dawn",
+    name: "Dawn's Embrace Emerald Dawn",
     description:
       "A striking emerald-green dial watch, crafted for those who greet a new day boldly.",
     dialColor: "Green",
     priceKobo: 18_500_000, // ₦185,000.00
     stock: 15,
-    imageUrl: "/brand/lineup-left.jpg",
+    imageUrl: "/brand/lineup-left.png",
   },
   {
-    name: "Dawns Embrace Pearl White",
+    name: "Dawn's Embrace Pearl White",
     description:
       "An elegant pearl-white dial with persian-blue accents — understated and timeless.",
     dialColor: "White",
     priceKobo: 12_000_000, // ₦120,000.00
     stock: 40,
-    imageUrl: "/brand/lineup-right.jpg",
+    imageUrl: "/brand/lineup-right.png",
   },
   {
-    name: "Dawns Embrace Obsidian Black",
+    name: "Dawn's Embrace Obsidian Black",
     description:
       "A bold obsidian-black dial watch for the modern minimalist. A new day, a new you.",
     dialColor: "Black",
     priceKobo: 21_000_000, // ₦210,000.00
     stock: 10,
-    imageUrl: "/brand/hero-watch.jpg",
+    imageUrl: "/brand/hero-watch.png",
   },
 ];
 
@@ -80,7 +80,7 @@ async function main() {
     create: {
       email: adminEmail,
       passwordHash,
-      name: "Dawns Embrace Admin",
+      name: "Dawn's Embrace Admin",
       role: "ADMIN",
       emailVerified: new Date(),
     },

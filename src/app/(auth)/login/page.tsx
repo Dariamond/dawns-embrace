@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -8,7 +8,8 @@ import { Suspense, useState } from "react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/shop";
+  // Only honor an explicit callbackUrl (e.g. redirected here from a gated page).
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +33,15 @@ function LoginForm() {
       return;
     }
 
-    router.push(callbackUrl);
+    // If the user was sent here from a specific page, honor that. Otherwise
+    // route by role: admins land on the dashboard, customers on the shop.
+    let destination = callbackUrl;
+    if (!destination) {
+      const session = await getSession();
+      destination = session?.user?.role === "ADMIN" ? "/admin" : "/shop";
+    }
+
+    router.push(destination);
     router.refresh();
   }
 

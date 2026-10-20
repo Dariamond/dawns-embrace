@@ -60,7 +60,7 @@ export async function sendVerificationEmail(
 ): Promise<SendEmailResult> {
   const html = `
     <div style="font-family:system-ui,Segoe UI,Roboto,sans-serif;max-width:480px;margin:0 auto;color:#111">
-      <h1 style="color:#060e6e;font-size:20px">Welcome to Dawns Embrace</h1>
+      <h1 style="color:#060e6e;font-size:20px">Welcome to Dawn's Embrace</h1>
       <p>A new day, a new you. Confirm your email to finish setting up your account.</p>
       <p style="margin:24px 0">
         <a href="${link}"
@@ -78,7 +78,7 @@ export async function sendVerificationEmail(
 
   return sendEmail({
     to,
-    subject: "Verify your Dawns Embrace account",
+    subject: "Verify your Dawn's Embrace account",
     html,
   });
 }

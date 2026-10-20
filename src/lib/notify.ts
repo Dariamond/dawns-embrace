@@ -18,7 +18,7 @@ function notificationHtml(title: string, body: string): string {
     <div style="font-family:system-ui,Segoe UI,Roboto,sans-serif;max-width:480px;margin:0 auto;color:#111">
       <h1 style="color:#060e6e;font-size:20px">${title}</h1>
       <p>${body}</p>
-      <p style="font-size:12px;color:#888">Dawns Embrace — A new day, a new you.</p>
+      <p style="font-size:12px;color:#888">Dawn's Embrace — A new day, a new you.</p>
     </div>
   `;
 }
