@@ -2,8 +2,9 @@
 // Data model per design.md §3. Prices stored as integer kobo (NGN minor unit).
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -77,6 +78,19 @@ model Product {
   isActive      Boolean     @default(true)
   createdAt     DateTime    @default(now())
   orderItems    OrderItem[]
+  images        ProductImage[]
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  publicId  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
 }
 
 model Order {
@@ -124,4 +138,13 @@ model Notification {
   orderId   String?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+// Key/value store for site-wide settings the admin controls (e.g. the intro
+// video shown between the landing page and the shop). Flexible for future keys.
+model SiteSetting {
+  key       String   @id
+  value     String?
+  publicId  String? // Cloudinary public id (for media settings, enables cleanup)
+  updatedAt DateTime @updatedAt
 }

@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Data layer + API for multiple product images and hard delete. Add the ProductImage Prisma model (FK to Product, onDelete Cascade) keeping Product.imageUrl as the primary image, create/apply the migration, add zod schemas, include images in getProduct, persist sub-images on product create, add admin sub-image API routes, and add permanent (hard) delete alongside the existing soft-delete. Foundational — FEAT-002 and FEAT-003 depend on this. Grounded in: Product model has no relations table for extra images; getProduct returns a bare Product; API routes role-gate inline with getCurrentUser(); OrderItem.productId is a required FK that snapshots nameSnapshot+unitPriceKobo.",
+  "status": "completed",
+  "steps": [
+    "Edit prisma/schema.prisma: add `model ProductImage { id String @id @default(cuid()) productId String product Product @relation(fields: [productId], references: [id], onDelete: Cascade) url String publicId String? sortOrder Int @default(0) createdAt DateTime @default(now()) @@index([productId]) }` and add `images ProductImage[]` to the Product model. Keep Product.imageUrl unchanged as the primary image.",
+    "Kill node then create+apply the migration (PowerShell): `Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2` then `npx prisma migrate dev --name add_product_images`. This regenerates the Prisma client. Do NOT run `migrate reset` (would wipe the 4 sample products + admin).",
+    "Edit src/lib/validation.ts: add `export const productImageSchema = z.object({ url: z.string().trim().url('Image URL must be a valid URL.'), publicId: z.string().trim().max(200).optional(), sortOrder: z.number().int().min(0).optional() })` with its inferred type, and extend productSchema with `subImages: z.array(productImageSchema).max(10).optional()`. Leave all existing fields and schemas intact.",
+    "Edit src/lib/products.ts getProduct to `prisma.product.findUnique({ where: { id }, include: { images: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] } } })`, and export `export type ProductWithImages = Prisma.ProductGetPayload<{ include: { images: true } }>` (import Prisma from @/generated/prisma). Update the return type to ProductWithImages | null. listActiveProducts and listActiveDialColors stay unchanged.",
+    "Edit src/app/api/products/route.ts POST: after validating with productSchema, create the product and, when parsed.data.subImages?.length, also create ProductImage rows — prefer nested `images: { create: parsed.data.subImages.map((img, i) => ({ url: img.url, publicId: img.publicId ?? null, sortOrder: img.sortOrder ?? i })) }` in the same prisma.product.create. Keep role-gating and the 201 { product } response shape.",
+    "Create src/app/api/products/[id]/images/route.ts with POST: inline role gate (getCurrentUser -> 401/403), parse body with productImageSchema, verify the product exists (404 if not), create a ProductImage with productId=id, return { image } at 201.",
+    "Create src/app/api/products/[id]/images/[imageId]/route.ts with DELETE: inline role gate, load the ProductImage by imageId, verify it belongs to the product id (404 otherwise), call deleteAsset(image.publicId, 'image') best-effort if publicId set, delete the row, return { ok: true }.",
+    "Edit src/app/api/products/[id]/route.ts: add hard delete via `DELETE /api/products/[id]?mode=hard`. Parse mode from the request URL searchParams. When mode==='hard': inline role gate; if `await prisma.orderItem.count({ where: { productId: id } }) > 0` return 409 { error: 'This product has existing orders. Deactivate it instead of permanently deleting.' }; else load the product including images, deleteAsset the main imagePublicId and every image.publicId (best-effort), then prisma.product.delete({ where: { id } }) (cascade removes ProductImage rows). When mode is absent, keep the existing soft-delete (isActive=false) behavior exactly."
+  ],
+  "acceptance_criteria": [
+    "A ProductImage table exists via a committed migration under prisma/migrations/*_add_product_images, with productId FK onDelete Cascade and Product.imageUrl untouched.",
+    "The 4 existing sample products and the admin user still exist (no data wipe).",
+    "getProduct returns the product with an ordered images array; productSchema optionally accepts subImages; new API routes are admin role-gated (401/403).",
+    "Hard delete blocks with a 409 and a clear message when the product has OrderItems; otherwise deletes the product, its ProductImage rows, and its Cloudinary assets. Soft-delete (no ?mode) is unchanged.",
+    "`npx tsc --noEmit` and `npx next lint` pass."
+  ],
+  "verification": [
+    "Kill node: `Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2`",
+    "`npx prisma migrate dev --name add_product_images` applies cleanly (no reset; existing data preserved).",
+    "`npx tsc --noEmit` passes.",
+    "`npx next lint` passes."
+  ],
+  "blocked_reason": null,
+  "findings": "ProductWithImages type exported from src/lib/products.ts (Prisma.ProductGetPayload<{ include: { images: true } }>, imported Prisma from @/generated/prisma). Migration folder: prisma/migrations/20261020143055_add_product_images (CREATE TABLE ProductImage + productId index + FK onDelete Cascade; additive only, no reset, existing data preserved). getProduct now returns ProductWithImages | null with images ordered by sortOrder asc then createdAt asc. productImageSchema + optional subImages (max 10) added to validation.ts. POST /api/products persists sub-images via nested create. New routes: POST /api/products/[id]/images and DELETE /api/products/[id]/images/[imageId] (admin-gated inline). DELETE /api/products/[id]?mode=hard: 409 when orderItem count > 0, else deletes product (cascade removes ProductImage) + best-effort deleteAsset on main image and each sub-image; soft-delete unchanged when mode absent. Verification: npx prisma migrate dev applied cleanly, npx tsc --noEmit passes, npx next lint passes (no warnings/errors)."
+}

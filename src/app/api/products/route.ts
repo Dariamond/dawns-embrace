@@ -64,6 +64,17 @@ export async function POST(request: Request) {
       imageUrl: data.imageUrl,
       imagePublicId: data.imagePublicId ?? null,
       isActive: data.isActive ?? true,
+      ...(data.subImages?.length
+        ? {
+            images: {
+              create: data.subImages.map((img, i) => ({
+                url: img.url,
+                publicId: img.publicId ?? null,
+                sortOrder: img.sortOrder ?? i,
+              })),
+            },
+          }
+        : {}),
     },
   });
 

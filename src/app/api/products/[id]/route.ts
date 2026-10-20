@@ -5,7 +5,7 @@
 
 import { NextResponse } from "next/server";
 
-import { deleteImage } from "@/lib/cloudinary";
+import { deleteAsset, deleteImage } from "@/lib/cloudinary";
 import { getProduct } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -71,7 +71,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await getCurrentUser();
@@ -83,10 +83,44 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  const { searchParams } = new URL(request.url);
+  const mode = searchParams.get("mode");
 
   const existing = await getProduct(id);
   if (!existing) {
     return NextResponse.json({ error: "Product not found." }, { status: 404 });
+  }
+
+  // Hard-delete: permanently remove the product, its sub-images, and its
+  // Cloudinary assets. Blocked when the product has order history.
+  if (mode === "hard") {
+    const orderCount = await prisma.orderItem.count({
+      where: { productId: id },
+    });
+    if (orderCount > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "This product has existing orders. Deactivate it instead of permanently deleting.",
+        },
+        { status: 409 },
+      );
+    }
+
+    // Best-effort Cloudinary cleanup for the main image + every sub-image
+    // (never blocks the delete). Cascade removes the ProductImage rows.
+    if (existing.imagePublicId) {
+      await deleteAsset(existing.imagePublicId, "image");
+    }
+    for (const image of existing.images) {
+      if (image.publicId) {
+        await deleteAsset(image.publicId, "image");
+      }
+    }
+
+    await prisma.product.delete({ where: { id } });
+
+    return NextResponse.json({ ok: true });
   }
 
   // Soft-delete: hide from the storefront rather than destroying order history.

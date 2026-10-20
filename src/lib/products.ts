@@ -1,7 +1,11 @@
 // Product query helpers for the storefront read side.
 
 import { prisma } from "@/lib/prisma";
-import type { Product } from "@/generated/prisma";
+import { Prisma, type Product } from "@/generated/prisma";
+
+export type ProductWithImages = Prisma.ProductGetPayload<{
+  include: { images: true };
+}>;
 
 export type ProductSort = "price-asc" | "price-desc";
 
@@ -31,8 +35,13 @@ export async function listActiveProducts(
 }
 
 /** Fetch a single product by id (returns null if not found). */
-export async function getProduct(id: string): Promise<Product | null> {
-  return prisma.product.findUnique({ where: { id } });
+export async function getProduct(id: string): Promise<ProductWithImages | null> {
+  return prisma.product.findUnique({
+    where: { id },
+    include: {
+      images: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+    },
+  });
 }
 
 /** Distinct dial colors across active products, for the shop filter UI. */

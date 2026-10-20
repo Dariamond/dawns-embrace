@@ -30,6 +30,13 @@ export const addressSchema = z.object({
 });
 export type AddressInput = z.infer<typeof addressSchema>;
 
+export const productImageSchema = z.object({
+  url: z.string().trim().url("Image URL must be a valid URL."),
+  publicId: z.string().trim().max(200).optional(),
+  sortOrder: z.number().int().min(0).optional(),
+});
+export type ProductImageInput = z.infer<typeof productImageSchema>;
+
 export const productSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(200),
   description: z.string().trim().min(1, "Description is required.").max(2000),
@@ -43,6 +50,7 @@ export const productSchema = z.object({
   imageUrl: z.string().trim().url("Image URL must be a valid URL."),
   imagePublicId: z.string().trim().max(200).optional(),
   isActive: z.boolean().optional(),
+  subImages: z.array(productImageSchema).max(10).optional(),
 });
 export type ProductInput = z.infer<typeof productSchema>;
 
