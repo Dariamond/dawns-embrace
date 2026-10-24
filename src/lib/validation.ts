@@ -77,6 +77,28 @@ export const productUpdateSchema = z
   });
 export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
 
+// Promotional banner create/update (admin-managed shop carousel).
+export const bannerSchema = z.object({
+  imageUrl: z.string().trim().url("Image URL must be a valid URL."),
+  publicId: z.string().trim().max(200).optional(),
+  linkUrl: z.string().trim().url("Link must be a valid URL.").optional(),
+});
+export type BannerInput = z.infer<typeof bannerSchema>;
+
+// Partial update schema for banner edits (toggle active, reorder, set/clear
+// link). At least one field must be present so a no-op PATCH is rejected.
+export const bannerUpdateSchema = z
+  .object({
+    isActive: z.boolean(),
+    sortOrder: z.number().int().min(0),
+    linkUrl: z.string().trim().url("Link must be a valid URL.").nullable(),
+  })
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "No fields to update.",
+  });
+export type BannerUpdateInput = z.infer<typeof bannerUpdateSchema>;
+
 export const orderStatusSchema = z.object({
   status: z.enum([
     "PENDING",

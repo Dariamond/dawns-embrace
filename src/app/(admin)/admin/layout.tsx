@@ -41,6 +41,9 @@ export default async function AdminLayout({
             <Link href="/admin/products" className="hover:text-persian-blue">
               Products
             </Link>
+            <Link href="/admin/banners" className="hover:text-persian-blue">
+              Banners
+            </Link>
             <Link href="/admin/orders" className="hover:text-persian-blue">
               Orders
             </Link>

@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { BannerCarousel } from "@/components/banner-carousel";
 import { ProductCard } from "@/components/product-card";
+import { listActiveBanners } from "@/lib/banners";
 import {
   listActiveDialColors,
   listActiveProducts,
@@ -27,13 +29,22 @@ export default async function ShopPage({
   const selectedDialColor = dialColor?.trim() || undefined;
   const selectedSort = parseSort(sort);
 
-  const [products, dialColors] = await Promise.all([
+  const [products, dialColors, banners] = await Promise.all([
     listActiveProducts({ dialColor: selectedDialColor, sort: selectedSort }),
     listActiveDialColors(),
+    listActiveBanners(),
   ]);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
+      <BannerCarousel
+        banners={banners.map((banner) => ({
+          id: banner.id,
+          imageUrl: banner.imageUrl,
+          linkUrl: banner.linkUrl,
+        }))}
+      />
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gulf-blue">Shop</h1>
         <p className="mt-1 text-gray-600">A new day, a new you.</p>

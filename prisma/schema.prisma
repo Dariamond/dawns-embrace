@@ -148,3 +148,18 @@ model SiteSetting {
   publicId  String? // Cloudinary public id (for media settings, enables cleanup)
   updatedAt DateTime @updatedAt
 }
+
+// Admin-managed promotional banners shown in the auto-rotating carousel at the
+// top of the shop page. Ordered by sortOrder; only active banners render.
+model Banner {
+  id        String   @id @default(cuid())
+  imageUrl  String // Cloudinary URL or local /brand/*.jpg path
+  publicId  String? // Cloudinary public id (for cleanup; null for local files)
+  linkUrl   String? // optional destination the slide links to
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
