@@ -41,7 +41,10 @@ export default async function AdminProductsPage() {
             </p>
           ) : (
             <div className="mt-4 overflow-x-auto">
-              <table className="w-full text-left">
+              <p className="px-4 pb-2 text-xs text-gray-400 lg:hidden">
+                Swipe the table sideways to see all columns →
+              </p>
+              <table className="w-full min-w-[720px] text-left">
                 <thead>
                   <tr className="text-xs uppercase tracking-wide text-gray-400">
                     <th className="px-4 py-2 font-medium">Image</th>
