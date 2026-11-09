@@ -36,7 +36,8 @@ export default async function ShopPage({
   ]);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
+    <main>
+      {/* Full-bleed promotional banner, flush under the nav (no side margins). */}
       <BannerCarousel
         banners={banners.map((banner) => ({
           id: banner.id,
@@ -45,10 +46,11 @@ export default async function ShopPage({
         }))}
       />
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gulf-blue">Shop</h1>
-        <p className="mt-1 text-gray-600">A new day, a new you.</p>
-      </div>
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gulf-blue">Shop</h1>
+          <p className="mt-1 text-gray-600">A new day, a new you.</p>
+        </div>
 
       <form
         method="get"
@@ -112,17 +114,18 @@ export default async function ShopPage({
         )}
       </form>
 
-      {products.length === 0 ? (
-        <p className="rounded-xl bg-brand-white p-8 text-center text-gray-600 shadow-sm">
-          No watches match your filters right now.
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+        {products.length === 0 ? (
+          <p className="rounded-xl bg-brand-white p-8 text-center text-gray-600 shadow-sm">
+            No watches match your filters right now.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </div>
     </main>
   );
 }

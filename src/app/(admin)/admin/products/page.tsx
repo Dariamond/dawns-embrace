@@ -59,6 +59,7 @@ export default async function AdminProductsPage() {
                       product={{
                         id: product.id,
                         name: product.name,
+                        description: product.description,
                         dialColor: product.dialColor,
                         priceKobo: product.priceKobo,
                         stock: product.stock,

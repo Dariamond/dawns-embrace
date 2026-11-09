@@ -25,22 +25,18 @@ const AUTO_ROTATE_MS = 5000;
 export function BannerCarousel({ banners }: { banners: BannerSlide[] }) {
   const count = banners.length;
 
-  // [currentIndex, direction] — direction drives the slide animation.
-  const [[index, direction], setState] = useState<[number, number]>([0, 0]);
+  const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
   const paginate = useCallback(
     (dir: number) => {
-      setState(([current]) => {
-        const next = (current + dir + count) % count;
-        return [next, dir];
-      });
+      setIndex((current) => (current + dir + count) % count);
     },
     [count],
   );
 
   const goTo = useCallback((target: number) => {
-    setState(([current]) => [target, target > current ? 1 : -1]);
+    setIndex(target);
   }, []);
 
   // Auto-rotate every 5s, unless paused, single slide, or the user prefers
@@ -69,32 +65,30 @@ export function BannerCarousel({ banners }: { banners: BannerSlide[] }) {
     }
   }
 
+  // Crossfade: the outgoing image fades out while the incoming one fades in
+  // (matches the micserah storefront). No horizontal sliding.
   const variants = {
-    enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0.4 }),
-    center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({ x: dir > 0 ? "-100%" : "100%", opacity: 0.4 }),
+    enter: { opacity: 0 },
+    center: { opacity: 1 },
+    exit: { opacity: 0 },
   };
 
   const current = banners[index];
 
   return (
     <div
-      className="relative mb-8 aspect-[16/9] w-full touch-pan-y select-none overflow-hidden rounded-2xl bg-gray-100"
+      className="relative aspect-[7/4] max-h-[80vh] w-full touch-pan-y select-none overflow-hidden bg-gray-900 sm:aspect-auto sm:h-[360px] lg:h-[420px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <AnimatePresence initial={false} custom={direction}>
+      <AnimatePresence initial={false} mode="sync">
         <motion.div
           key={current.id}
-          custom={direction}
           variants={variants}
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{
-            x: { type: "spring", stiffness: 300, damping: 30 },
-            opacity: { duration: 0.2 },
-          }}
+          transition={{ opacity: { duration: 0.8, ease: "easeInOut" } }}
           drag={count > 1 ? "x" : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
@@ -111,7 +105,7 @@ export function BannerCarousel({ banners }: { banners: BannerSlide[] }) {
                 src={current.imageUrl}
                 alt={`Promotional banner ${index + 1} of ${count}`}
                 fill
-                sizes="(max-width: 1152px) 100vw, 1152px"
+                sizes="100vw"
                 className="object-cover"
                 priority={index === 0}
                 draggable={false}
@@ -122,7 +116,7 @@ export function BannerCarousel({ banners }: { banners: BannerSlide[] }) {
               src={current.imageUrl}
               alt={`Promotional banner ${index + 1} of ${count}`}
               fill
-              sizes="(max-width: 1152px) 100vw, 1152px"
+              sizes="100vw"
               className="pointer-events-none object-cover"
               priority={index === 0}
               draggable={false}

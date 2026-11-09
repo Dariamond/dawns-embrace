@@ -15,6 +15,7 @@ import { uploadImageToCloudinary } from "@/lib/upload-image";
 export type AdminProduct = {
   id: string;
   name: string;
+  description: string;
   dialColor: string;
   priceKobo: number;
   stock: number;
@@ -28,6 +29,7 @@ export function ProductRow({ product }: { product: AdminProduct }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(product.name);
+  const [description, setDescription] = useState(product.description);
   const [priceNaira, setPriceNaira] = useState(
     (product.priceKobo / 100).toString(),
   );
@@ -49,6 +51,10 @@ export function ProductRow({ product }: { product: AdminProduct }) {
       setError("Invalid stock.");
       return;
     }
+    if (!description.trim()) {
+      setError("Description is required.");
+      return;
+    }
 
     setBusy(true);
     try {
@@ -57,6 +63,7 @@ export function ProductRow({ product }: { product: AdminProduct }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          description: description.trim(),
           priceKobo: Math.round(price * 100),
           stock: stockNum,
         }),
@@ -154,6 +161,27 @@ export function ProductRow({ product }: { product: AdminProduct }) {
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not deactivate.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function reactivate() {
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error ?? "Could not reactivate.");
+      }
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reactivate.");
     } finally {
       setBusy(false);
     }
@@ -268,7 +296,15 @@ export function ProductRow({ product }: { product: AdminProduct }) {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
+            placeholder="Name"
             className="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+          />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Description"
+            rows={3}
+            className="mt-2 w-full min-w-[12rem] rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
           />
         </td>
         <td className="px-4 py-3 text-sm text-gray-500">{product.dialColor}</td>
@@ -339,7 +375,7 @@ export function ProductRow({ product }: { product: AdminProduct }) {
           >
             Edit
           </button>
-          {product.isActive && (
+          {product.isActive ? (
             <button
               type="button"
               onClick={deactivate}
@@ -347,6 +383,15 @@ export function ProductRow({ product }: { product: AdminProduct }) {
               className="rounded border border-red-200 px-3 py-1 text-xs font-medium text-red-600 disabled:opacity-60"
             >
               Deactivate
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={reactivate}
+              disabled={busy}
+              className="rounded border border-green-300 px-3 py-1 text-xs font-medium text-green-700 disabled:opacity-60"
+            >
+              Reactivate
             </button>
           )}
           <button

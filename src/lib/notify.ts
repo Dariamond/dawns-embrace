@@ -3,7 +3,7 @@
 // a failed email can never block the order operation that triggered it.
 
 import { env } from "@/lib/env";
-import { sendEmail } from "@/lib/email";
+import { emailLayout, sendEmail } from "@/lib/email";
 import { formatKobo } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
@@ -14,13 +14,10 @@ export type NotifyInput = {
 };
 
 function notificationHtml(title: string, body: string): string {
-  return `
-    <div style="font-family:system-ui,Segoe UI,Roboto,sans-serif;max-width:480px;margin:0 auto;color:#111">
-      <h1 style="color:#060e6e;font-size:20px">${title}</h1>
-      <p>${body}</p>
-      <p style="font-size:12px;color:#888">Dawn's Embrace — A new day, a new you.</p>
-    </div>
-  `;
+  return emailLayout(`
+    <h1 style="color:#060e6e;font-size:20px;margin-top:0">${title}</h1>
+    <p>${body}</p>
+  `);
 }
 
 /**

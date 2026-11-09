@@ -19,7 +19,7 @@ export function ProductCard({ product }: { product: Product }) {
           src={product.imageUrl}
           alt={product.name}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          sizes="(max-width: 1024px) 50vw, 25vw"
           className="object-cover"
         />
         {outOfStock && (
@@ -29,21 +29,21 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </Link>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <Link href={`/product/${product.id}`} className="flex-1">
-          <h3 className="text-lg font-semibold text-gulf-blue">
+          <h3 className="text-sm font-semibold text-gulf-blue sm:text-lg">
             {product.name}
           </h3>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 text-xs text-gray-600 sm:text-sm">
             {product.dialColor} dial
           </p>
         </Link>
 
-        <p className="mt-3 text-xl font-bold text-persian-blue">
+        <p className="mt-2 text-base font-bold text-persian-blue sm:mt-3 sm:text-xl">
           {formatKobo(product.priceKobo)}
         </p>
 
-        <div className="mt-4">
+        <div className="mt-3 sm:mt-4">
           <AddToCartButton
             product={{
               id: product.id,

@@ -46,10 +46,10 @@ export function LandingHero() {
       />
 
       {/* Readability scrim: transparent at top, darker toward the bottom where the
-          text sits. Keeps the white text legible without a visible text box. */}
+          text sits. pointer-events-none so it never intercepts button clicks. */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent"
       />
 
       {/* Floating content, anchored toward the lower area of the screen */}
@@ -57,7 +57,7 @@ export function LandingHero() {
         variants={container}
         initial={initial}
         animate="show"
-        className="absolute inset-x-0 bottom-0 flex flex-col items-center px-6 pb-16 text-center text-brand-white sm:pb-20"
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center px-6 pb-16 text-center text-brand-white sm:pb-20"
       >
         <motion.h1
           variants={riseIn}
